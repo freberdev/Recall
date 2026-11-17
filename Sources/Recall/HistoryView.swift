@@ -166,17 +166,14 @@ private struct ClipRow: View {
     }
 }
 
-/// The small pictures in the list, decoded once each.
+/// The small pictures in the list.
+///
+/// Nothing is kept between redraws: the picture lives in the clip and goes when the clip is deleted.
 @MainActor
 private enum Thumbnails {
-    private static let cache = NSCache<NSUUID, NSImage>()
-
     static func image(for clip: Clip) -> NSImage? {
         guard let data = clip.image?.thumbnail else { return nil }
-        if let cached = cache.object(forKey: clip.id as NSUUID) { return cached }
-        guard let image = NSImage(data: data) else { return nil }
-        cache.setObject(image, forKey: clip.id as NSUUID)
-        return image
+        return NSImage(data: data)
     }
 
     /// The picture's own proportions, as large as fits in a row.
