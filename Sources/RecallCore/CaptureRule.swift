@@ -28,11 +28,45 @@ public enum CaptureRule {
         "com.apple.is-remote-clipboard",
     ]
 
+    /// The image formats Recall reads, the one it would rather have first.
+    public static let imageTypes = ["public.png", "public.jpeg", "public.tiff", "public.heic"]
+
+    /// What the clipboard offers that Recall may collect.
+    public enum Content: Equatable, Sendable {
+        case nothing
+        case text
+        case image
+        /// Both. Which one to keep is decided by `prefersImage(over:)` once the text is read.
+        case textAndImage
+    }
+
+    /// Judged from the kinds of data alone, without reading any of it.
+    public static func content(types: [String], collectsImages: Bool) -> Content {
+        guard confidential.isDisjoint(with: types), unsupported.isDisjoint(with: types) else { return .nothing }
+        let hasText = types.contains(plainText)
+        let hasImage = collectsImages && types.contains(where: imageTypes.contains)
+        switch (hasText, hasImage) {
+        case (true, true): return .textAndImage
+        case (true, false): return .text
+        case (false, true): return .image
+        case (false, false): return .nothing
+        }
+    }
+
     /// True when the clipboard holds plain text and nothing says to leave it alone.
     public static func allowsReading(types: [String]) -> Bool {
-        types.contains(plainText)
-            && confidential.isDisjoint(with: types)
-            && unsupported.isDisjoint(with: types)
+        let content = content(types: types, collectsImages: false)
+        return content == .text
+    }
+
+    /// When the clipboard holds both text and an image, which one did the user copy?
+    ///
+    /// A browser puts the address next to a copied image, and then the image is the point.
+    /// A spreadsheet or a presentation puts a picture of the selection next to the copied
+    /// text, and then the text is. So the image wins only over a lone address, or no text.
+    public static func prefersImage(over string: String?) -> Bool {
+        guard let text = text(from: string) else { return true }
+        return Clip.Kind.of(text) == .link
     }
 
     /// The text to keep, exactly as copied, or nil if it is empty, only whitespace or too large.

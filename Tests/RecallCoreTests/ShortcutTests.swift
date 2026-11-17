@@ -133,4 +133,48 @@ import Testing
             }
         }
     }
+
+    @Test func imageLimitsDefaultToTenImagesOfTenMegabytes() {
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        #expect(preferences.limits.maxImageCount == 10)
+        #expect(preferences.limits.maxImageMegabytes == 10)
+        #expect(preferences.limits.maxImageBytes == 10_000_000)
+        #expect(preferences.limits.collectsImages)
+    }
+
+    @Test func imageLimitsPersist() {
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        preferences.limits = Limits(maxCount: 500, maxAgeDays: 30, maxImageCount: 50, maxImageMegabytes: 20)
+        let stored = Preferences(defaults: defaults).limits
+        #expect(stored.maxImageCount == 50)
+        #expect(stored.maxImageMegabytes == 20)
+    }
+
+    @Test func collectingNoImagesPersists() {
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        preferences.limits = Limits(maxCount: 500, maxAgeDays: 30, maxImageCount: 0, maxImageMegabytes: 10)
+        #expect(Preferences(defaults: defaults).limits.maxImageCount == 0)
+        #expect(!Preferences(defaults: defaults).limits.collectsImages)
+    }
+
+    @Test func storedImageLimitsThatAreNotAmongTheChoicesFallBackToTheDefault() {
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(7, forKey: "maxImageCount")
+        defaults.set(-1, forKey: "maxImageMegabytes")
+        #expect(preferences.limits == .default)
+        defaults.set("lots", forKey: "maxImageCount")
+        defaults.set(3, forKey: "maxImageMegabytes")
+        #expect(preferences.limits == .default)
+    }
+
+    @Test func everyImageChoiceOfferedInSettingsCanBeStored() {
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        for count in Limits.imageCountChoices {
+            for megabytes in Limits.imageMegabyteChoices {
+                let limits = Limits(maxCount: 500, maxAgeDays: 30, maxImageCount: count, maxImageMegabytes: megabytes)
+                preferences.limits = limits
+                #expect(preferences.limits == limits)
+            }
+        }
+    }
 }

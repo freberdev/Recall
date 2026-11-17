@@ -284,9 +284,29 @@ final class FakeClipboard: ClipboardSource {
         return string
     }
 
+    var image: Data?
+    /// How many times the image has been read.
+    private(set) var imageReads = 0
+
+    func readImage() -> Data? {
+        imageReads += 1
+        let image = image
+        onRead?()
+        return image
+    }
+
     func copy(_ text: String, extraTypes: [String] = []) {
         changeCount += 1
         string = text
+        image = nil
         types = [CaptureRule.plainText] + extraTypes
+    }
+
+    /// An image, with text beside it if `text` is given, the way browsers and office apps copy.
+    func copyImage(_ data: Data, type: String = "public.png", text: String? = nil, extraTypes: [String] = []) {
+        changeCount += 1
+        image = data
+        string = text
+        types = [type] + (text == nil ? [] : [CaptureRule.plainText]) + extraTypes
     }
 }

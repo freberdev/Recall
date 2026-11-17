@@ -9,9 +9,11 @@ public protocol ClipboardSource: AnyObject {
     var types: [String] { get }
     /// The content as plain text.
     func readString() -> String?
+    /// The content as an image, in the first of `CaptureRule.imageTypes` that is there.
+    func readImage() -> Data?
 }
 
-/// Notices when the clipboard changes and records the new text in the history.
+/// Notices when the clipboard changes and records the new text or image in the history.
 ///
 /// macOS has no notification for clipboard changes, so `poll()` is called on a timer. It only
 /// compares a number, and reads the clipboard at most once per change.
@@ -52,20 +54,59 @@ public final class ClipboardWatcher {
         let count = source.changeCount
         guard count != lastChangeCount else { return }
         lastChangeCount = count
+        guard !isPaused else { return }
 
-        guard !isPaused, CaptureRule.allowsReading(types: source.types) else { return }
-        let string = source.readString()
-        // Another app may have replaced the contents, or marked them as confidential, between
-        // the check and the read. What was read is then thrown away, and a replacement is
-        // judged on its own at the next poll.
-        guard source.changeCount == count, CaptureRule.allowsReading(types: source.types),
-              let text = CaptureRule.text(from: string)
-        else { return }
-        store.record(text, now: now())
+        let content = content
+        switch content {
+        case .nothing:
+            return
+        case .text:
+            let string = source.readString()
+            guard isUnchanged(count, content) else { return }
+            recordText(string)
+        case .image:
+            let image = source.readImage()
+            guard isUnchanged(count, content) else { return }
+            recordImage(image)
+        case .textAndImage:
+            let string = source.readString()
+            guard isUnchanged(count, content) else { return }
+            guard CaptureRule.prefersImage(over: string) else {
+                recordText(string)
+                return
+            }
+            let image = source.readImage()
+            guard isUnchanged(count, content) else { return }
+            // An image that is too large to keep still leaves its address worth keeping.
+            if !recordImage(image) { recordText(string) }
+        }
     }
 
     /// Tells the watcher that the change with this number was made by Recall itself.
     public func ignoreChange(_ changeCount: Int) {
         lastChangeCount = changeCount
+    }
+
+    private var content: CaptureRule.Content {
+        CaptureRule.content(types: source.types, collectsImages: store.limits.collectsImages)
+    }
+
+    /// Another app may have replaced the contents, or marked them as confidential, between the
+    /// check and the read. What was read is then thrown away, and a replacement is judged on
+    /// its own at the next poll.
+    private func isUnchanged(_ count: Int, _ expected: CaptureRule.Content) -> Bool {
+        source.changeCount == count && content == expected
+    }
+
+    private func recordText(_ string: String?) {
+        guard let text = CaptureRule.text(from: string) else { return }
+        store.record(text, now: now())
+    }
+
+    @discardableResult
+    private func recordImage(_ data: Data?) -> Bool {
+        guard let data, let image = ImageCodec.capture(data, maxBytes: store.limits.maxImageBytes)
+        else { return false }
+        return store.record(image: image, now: now()) != nil
     }
 }

@@ -9,6 +9,8 @@ public struct Preferences {
         static let isPaused = "isPaused"
         static let maxCount = "maxCount"
         static let maxAgeDays = "maxAgeDays"
+        static let maxImageCount = "maxImageCount"
+        static let maxImageMegabytes = "maxImageMegabytes"
     }
 
     private let defaults: UserDefaults
@@ -64,11 +66,21 @@ public struct Preferences {
                     limits.maxAgeDays = days
                 }
             }
+            if let count = defaults.object(forKey: Key.maxImageCount) as? Int,
+               Limits.imageCountChoices.contains(count) {
+                limits.maxImageCount = count
+            }
+            if let megabytes = defaults.object(forKey: Key.maxImageMegabytes) as? Int,
+               Limits.imageMegabyteChoices.contains(megabytes) {
+                limits.maxImageMegabytes = megabytes
+            }
             return limits
         }
         nonmutating set {
             defaults.set(newValue.maxCount, forKey: Key.maxCount)
             defaults.set(newValue.maxAgeDays ?? 0, forKey: Key.maxAgeDays)
+            defaults.set(newValue.maxImageCount, forKey: Key.maxImageCount)
+            defaults.set(newValue.maxImageMegabytes, forKey: Key.maxImageMegabytes)
         }
     }
 }

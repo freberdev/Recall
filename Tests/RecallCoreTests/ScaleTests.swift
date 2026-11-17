@@ -59,4 +59,37 @@ import Testing
         later.load(now: date(2))
         #expect(later.clips.first?.text.utf8.count == CaptureRule.maxBytes)
     }
+
+    @Test func aScreenSizedImageIsCapturedAndStoredQuickly() throws {
+        let store = HistoryStore(files: temp.files(), limits: limits)
+        // The size of a large laptop screen, as the uncompressed TIFF some apps put on the clipboard.
+        let tiff = makeImageData(width: 3456, height: 2234, type: "public.tiff")
+        #expect(tiff.count > 20_000_000)
+
+        var captured: CapturedImage?
+        let capturing = elapsed { captured = ImageCodec.capture(tiff, maxBytes: limits.maxImageBytes) }
+        let image = try #require(captured)
+        #expect(capturing < .seconds(1), "capturing took \(capturing)")
+
+        let recording = elapsed { store.record(image: image, now: date(1)) }
+        #expect(recording < .milliseconds(200), "recording took \(recording)")
+        #expect(store.clips.first?.image?.width == 3456)
+    }
+
+    @Test func theLargestImageIsStoredAndReadBackQuickly() throws {
+        let store = HistoryStore(files: temp.files(), limits: limits)
+        // Noise does not compress, so the PNG is close to the ten megabyte limit.
+        let png = makeNoiseImageData(side: 1800)
+        #expect(png.count > 9_000_000 && png.count < limits.maxImageBytes)
+        let image = try #require(ImageCodec.capture(png, maxBytes: limits.maxImageBytes))
+
+        var clip: Clip?
+        let recording = elapsed { clip = store.record(image: image, now: date(1)) }
+        #expect(recording < .milliseconds(300), "recording took \(recording)")
+
+        var data: Data?
+        let reading = elapsed { data = store.imageData(for: try! #require(clip).id) }
+        #expect(reading < .milliseconds(300), "reading took \(reading)")
+        #expect(data == png)
+    }
 }
