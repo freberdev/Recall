@@ -18,7 +18,15 @@ public protocol ClipboardSource: AnyObject {
 @MainActor
 public final class ClipboardWatcher {
     /// While paused, changes are noted but nothing is read or recorded.
-    public var isPaused: Bool
+    ///
+    /// Whatever is on the clipboard at the moment of pausing or resuming is left alone, also
+    /// when it was copied so recently that no poll has seen it yet.
+    public var isPaused: Bool {
+        didSet {
+            guard isPaused != oldValue else { return }
+            lastChangeCount = source.changeCount
+        }
+    }
 
     private let source: ClipboardSource
     private let store: HistoryStore
@@ -45,8 +53,13 @@ public final class ClipboardWatcher {
         guard count != lastChangeCount else { return }
         lastChangeCount = count
 
-        guard !isPaused, CaptureRule.allowsReading(types: source.types),
-              let text = CaptureRule.text(from: source.readString())
+        guard !isPaused, CaptureRule.allowsReading(types: source.types) else { return }
+        let string = source.readString()
+        // Another app may have replaced the contents, or marked them as confidential, between
+        // the check and the read. What was read is then thrown away, and a replacement is
+        // judged on its own at the next poll.
+        guard source.changeCount == count, CaptureRule.allowsReading(types: source.types),
+              let text = CaptureRule.text(from: string)
         else { return }
         store.record(text, now: now())
     }
