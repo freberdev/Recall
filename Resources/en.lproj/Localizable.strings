@@ -1,0 +1,67 @@
+/* Menu bar */
+"menu.label" = "Recall";
+"menu.label.paused" = "Recall, paused";
+"menu.open" = "Open Recall  %@";
+"menu.pause" = "Pause Collecting";
+"menu.resume" = "Resume Collecting";
+"menu.clear" = "Clear History…";
+"menu.settings" = "Settings…";
+"menu.quit" = "Quit Recall";
+
+/* Panel */
+"history.search.placeholder" = "Search";
+"history.search.label" = "Search history";
+"history.kind.text" = "Text";
+"history.kind.link" = "Link";
+"history.row.copy" = "Copy";
+"history.row.delete" = "Delete";
+"history.noMatches" = "No matches.";
+"history.empty.title" = "Nothing copied yet";
+"history.empty.hint" = "Copy as usual. %@ opens Recall from anywhere.";
+"history.empty.paused" = "Collecting is paused, so what you copy is not kept.";
+
+/* Status line */
+"status.paused" = "Collecting is paused";
+"status.resume" = "Resume";
+"status.saveFailed" = "Couldn't save";
+"status.saveFailed.help" = "The history could not be written to disk. What you copy is kept until Recall quits.";
+"status.hint.copy" = "↩ Copy";
+"status.hint.delete" = "⌘⌫ Delete";
+
+/* Clipboard access */
+"access.asks" = "macOS asks before Recall may read the clipboard. Allow it in System Settings to collect without being asked.";
+"access.denied" = "macOS is not letting Recall read the clipboard, so nothing is collected.";
+"access.open" = "Open System Settings…";
+
+/* Settings */
+"settings.title" = "Recall Settings";
+"settings.shortcut.label" = "Open Recall";
+"settings.shortcut.change" = "Change shortcut";
+"settings.shortcut.recording" = "Press a shortcut…";
+"settings.shortcut.hint" = "Click the shortcut, then press the new one. If it doesn't seem to do anything, another app may be using it. Pick a different one.";
+"settings.shortcut.needsModifier" = "A shortcut needs ⌘ or ⌃. Option alone would get in the way of typing characters such as @ and |.";
+"settings.shortcut.refused" = "macOS didn't accept that shortcut. The previous one is still in use.";
+"settings.login.label" = "Open Recall at login";
+"settings.login.failed" = "Couldn't change the login item. You can set it under System Settings > General > Login Items.";
+
+"settings.history.title" = "History";
+"settings.history.count" = "Keep at most";
+"settings.history.count.value" = "%ld clips";
+"settings.history.age" = "Remove unused clips after";
+"settings.history.age.day" = "1 day";
+"settings.history.age.week" = "1 week";
+"settings.history.age.month" = "1 month";
+"settings.history.age.quarter" = "3 months";
+"settings.history.age.never" = "Never";
+"settings.clear.button" = "Clear History…";
+"settings.clear.title" = "Delete the whole history?";
+"settings.clear.message" = "Everything Recall has collected is deleted from this Mac. It can't be undone.";
+"settings.clear.confirm" = "Delete History";
+"settings.clear.cancel" = "Cancel";
+
+"settings.privacy.title" = "Privacy";
+"settings.privacy.collect" = "Collect what I copy";
+"settings.privacy.what" = "Recall keeps the text and links you copy. It skips what password managers mark as confidential, but it can't recognise everything that is sensitive. Pause collecting or delete a clip whenever you need to.";
+"settings.privacy.where" = "The history is stored encrypted on this Mac and never leaves it. Recall has no access to the network.";
+"settings.privacy.folder" = "History folder";
+"settings.privacy.reveal" = "Show in Finder";

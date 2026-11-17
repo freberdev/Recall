@@ -1,0 +1,67 @@
+/* Menu bar */
+"menu.label" = "Recall";
+"menu.label.paused" = "Recall, pausad";
+"menu.open" = "Öppna Recall  %@";
+"menu.pause" = "Pausa insamlingen";
+"menu.resume" = "Återuppta insamlingen";
+"menu.clear" = "Rensa historik…";
+"menu.settings" = "Inställningar…";
+"menu.quit" = "Avsluta Recall";
+
+/* Panel */
+"history.search.placeholder" = "Sök";
+"history.search.label" = "Sök i historiken";
+"history.kind.text" = "Text";
+"history.kind.link" = "Länk";
+"history.row.copy" = "Kopiera";
+"history.row.delete" = "Radera";
+"history.noMatches" = "Inga träffar.";
+"history.empty.title" = "Inget kopierat än";
+"history.empty.hint" = "Kopiera som vanligt. %@ öppnar Recall var du än är.";
+"history.empty.paused" = "Insamlingen är pausad, så det du kopierar sparas inte.";
+
+/* Status line */
+"status.paused" = "Insamlingen är pausad";
+"status.resume" = "Återuppta";
+"status.saveFailed" = "Kunde inte spara";
+"status.saveFailed.help" = "Historiken kunde inte skrivas till disk. Det du kopierar finns kvar tills Recall avslutas.";
+"status.hint.copy" = "↩ Kopiera";
+"status.hint.delete" = "⌘⌫ Radera";
+
+/* Clipboard access */
+"access.asks" = "macOS frågar innan Recall får läsa urklipp. Tillåt det i Systeminställningar för att samla in utan frågor.";
+"access.denied" = "macOS låter inte Recall läsa urklipp, så inget samlas in.";
+"access.open" = "Öppna Systeminställningar…";
+
+/* Settings */
+"settings.title" = "Inställningar för Recall";
+"settings.shortcut.label" = "Öppna Recall";
+"settings.shortcut.change" = "Byt kortkommando";
+"settings.shortcut.recording" = "Tryck ett kortkommando…";
+"settings.shortcut.hint" = "Klicka på kortkommandot och tryck sedan det nya. Om det inte verkar göra något kan en annan app använda det. Välj då ett annat.";
+"settings.shortcut.needsModifier" = "Ett kortkommando behöver ⌘ eller ⌃. Bara Alternativ skulle krocka med tecken som @ och |.";
+"settings.shortcut.refused" = "macOS godtog inte kortkommandot. Det förra gäller fortfarande.";
+"settings.login.label" = "Öppna Recall vid inloggning";
+"settings.login.failed" = "Det gick inte att ändra inloggningsobjektet. Du kan ändra det under Systeminställningar > Allmänt > Inloggningsobjekt.";
+
+"settings.history.title" = "Historik";
+"settings.history.count" = "Spara högst";
+"settings.history.count.value" = "%ld urklipp";
+"settings.history.age" = "Ta bort oanvända urklipp efter";
+"settings.history.age.day" = "1 dag";
+"settings.history.age.week" = "1 vecka";
+"settings.history.age.month" = "1 månad";
+"settings.history.age.quarter" = "3 månader";
+"settings.history.age.never" = "Aldrig";
+"settings.clear.button" = "Rensa historik…";
+"settings.clear.title" = "Radera hela historiken?";
+"settings.clear.message" = "Allt som Recall har samlat in raderas från den här Macen. Det går inte att ångra.";
+"settings.clear.confirm" = "Radera historiken";
+"settings.clear.cancel" = "Avbryt";
+
+"settings.privacy.title" = "Integritet";
+"settings.privacy.collect" = "Samla in det jag kopierar";
+"settings.privacy.what" = "Recall sparar text och länkar som du kopierar. Det som lösenordshanterare märker som hemligt hoppas över, men Recall kan inte känna igen allt som är känsligt. Pausa insamlingen eller radera ett urklipp när du behöver.";
+"settings.privacy.where" = "Historiken lagras krypterad på den här Macen och lämnar den aldrig. Recall har ingen åtkomst till nätverket.";
+"settings.privacy.folder" = "Mapp för historiken";
+"settings.privacy.reveal" = "Visa i Finder";
