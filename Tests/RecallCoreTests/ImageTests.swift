@@ -388,6 +388,13 @@ import Testing
         #expect(CaptureRule.content(types: types, collectsImages: true) == .textAndImage)
     }
 
+    @Test func formattedTextBesideAnImageIsText() {
+        for rich in ["public.rtf", "com.apple.flat-rtfd", "com.apple.rtfd"] {
+            let types = ["public.utf8-plain-text", rich, "public.tiff"]
+            #expect(CaptureRule.content(types: types, collectsImages: true) == .text)
+        }
+    }
+
     @Test func whenImagesAreNotCollectedTheyAreNotSeen() {
         #expect(CaptureRule.content(types: ["public.png"], collectsImages: false) == .nothing)
         #expect(CaptureRule.content(types: ["public.png", "public.utf8-plain-text"], collectsImages: false) == .text)
@@ -469,6 +476,27 @@ import Testing
         watcher.poll()
 
         #expect(store.clips.map(\.text) == ["Q1\t1200\nQ2\t1350"])
+        #expect(clipboard.imageReads == 0)
+    }
+
+    @Test func aLoneAddressCopiedFromASpreadsheetCellIsKeptAsTheAddress() {
+        let store = makeStore()
+        let watcher = makeWatcher(store)
+        clipboard.copyImage(
+            makeImageData(), type: "public.tiff", text: "https://example.com/report", extraTypes: ["public.rtf"])
+        watcher.poll()
+
+        #expect(store.clips.map(\.kind) == [.link])
+        #expect(clipboard.imageReads == 0)
+    }
+
+    @Test func aPictureOfTheSelectionWithoutFormattingStillLosesToOrdinaryText() {
+        let store = makeStore()
+        let watcher = makeWatcher(store)
+        clipboard.copyImage(makeImageData(), type: "public.tiff", text: "A heading on a slide")
+        watcher.poll()
+
+        #expect(store.clips.map(\.text) == ["A heading on a slide"])
         #expect(clipboard.imageReads == 0)
     }
 

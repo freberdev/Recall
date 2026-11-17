@@ -31,6 +31,10 @@ public enum CaptureRule {
     /// The image formats Recall reads, the one it would rather have first.
     public static let imageTypes = ["public.png", "public.jpeg", "public.tiff", "public.heic"]
 
+    /// Formatted text. An office app puts it beside copied text, together with a picture of
+    /// the selection, while a browser that copies an image does not.
+    static let richText: Set<String> = ["public.rtf", "com.apple.flat-rtfd", "com.apple.rtfd"]
+
     /// What the clipboard offers that Recall may collect.
     public enum Content: Equatable, Sendable {
         case nothing
@@ -46,7 +50,7 @@ public enum CaptureRule {
         let hasText = types.contains(plainText)
         let hasImage = collectsImages && types.contains(where: imageTypes.contains)
         switch (hasText, hasImage) {
-        case (true, true): return .textAndImage
+        case (true, true): return richText.isDisjoint(with: types) ? .textAndImage : .text
         case (true, false): return .text
         case (false, true): return .image
         case (false, false): return .nothing
@@ -62,8 +66,9 @@ public enum CaptureRule {
     /// When the clipboard holds both text and an image, which one did the user copy?
     ///
     /// A browser puts the address next to a copied image, and then the image is the point.
-    /// A spreadsheet or a presentation puts a picture of the selection next to the copied
-    /// text, and then the text is. So the image wins only over a lone address, or no text.
+    /// An app that puts a picture of the selection next to copied text means the text. So the
+    /// image wins only over a lone address, or no text. Text that comes with formatting never
+    /// gets this far: `content(types:collectsImages:)` has already called it text.
     public static func prefersImage(over string: String?) -> Bool {
         guard let text = text(from: string) else { return true }
         return Clip.Kind.of(text) == .link

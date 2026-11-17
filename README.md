@@ -41,7 +41,7 @@ Recall keeps plain text, links and images. A link is a single address, such as `
 
 Images are screenshots, pictures copied in a browser or an image editor, and anything else that reaches the clipboard as PNG, JPEG, TIFF or HEIC. PNG and JPEG are kept as they are, the others are stored as PNG. A row shows a small picture and the size in pixels, and Return puts the image back on the clipboard. Images have no text to search, so they are shown only while the search field is empty.
 
-When the clipboard holds both text and an image, Recall keeps one of them. A browser puts the address next to a copied image, and then Recall keeps the image. A spreadsheet or a presentation puts a picture of the selection next to the copied text, and then Recall keeps the text. The rule is that the image wins over a lone address and loses to any other text.
+When the clipboard holds both text and an image, Recall keeps one of them. A browser puts the address next to a copied image, and then Recall keeps the image. A spreadsheet or a presentation puts a picture of the selection next to the copied text, and then Recall keeps the text. The rule is that the image wins over a lone address and loses to any other text, and to all text that comes with formatting, which is how office apps copy.
 
 It leaves these alone, without reading them:
 
