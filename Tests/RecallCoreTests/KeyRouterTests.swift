@@ -92,6 +92,15 @@ import Testing
         }
     }
 
+    @Test func aHeldCommandDeleteIsSwallowedWhereverFocusIs() {
+        // Deleting the last row moves focus to the search field. The repeats of the same
+        // key press must not go on to clear the search text.
+        #expect(KeyRouter.swallowsRepeat(Self.press(Self.delete, .command)))
+        #expect(!KeyRouter.swallowsRepeat(Self.press(Self.delete)))
+        #expect(!KeyRouter.swallowsRepeat(Self.press(Self.a)))
+        #expect(!KeyRouter.swallowsRepeat(Self.press(Self.down)))
+    }
+
     @Test func typingWhileTheListHasFocusGoesBackToTheSearchField() {
         #expect(KeyRouter.returnsFocusToSearch(Self.press(Self.a), focus: .list))
         #expect(KeyRouter.returnsFocusToSearch(Self.press(Self.a, .shift), focus: .list))

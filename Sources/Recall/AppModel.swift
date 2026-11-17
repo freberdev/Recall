@@ -142,6 +142,9 @@ final class AppModel {
     func showPanel() {
         guard let panel else { return }
         if !panel.isVisible { list.reset() }
+        // Recall hides itself after its settings window closes. Its panel can only be shown
+        // once it is unhidden, and it must not become the active app in the process.
+        if NSApp.isHidden { NSApp.unhideWithoutActivation() }
         panel.show()
     }
 
@@ -154,6 +157,9 @@ final class AppModel {
     /// Puts a clip back on the clipboard, moves it to the top and closes the panel.
     /// The app the user came from is still in front, ready for ⌘V.
     func copy(_ clip: Clip) {
+        // Something copied a moment ago may not have been seen yet. Record it first, or
+        // Recall's own write would hide it.
+        watcher.poll()
         let changeCount = clipboard.write(clip.text)
         watcher.ignoreChange(changeCount)
         store.markUsed(id: clip.id, now: Date())
@@ -161,8 +167,7 @@ final class AppModel {
     }
 
     func delete(_ clip: Clip) {
-        list.select(clip.id)
-        deleteSelected()
+        do { try store.delete(id: clip.id) } catch { NSSound.beep() }
     }
 
     private func deleteSelected() {
@@ -190,6 +195,7 @@ final class AppModel {
         alert.buttons.first?.hasDestructiveAction = true
         NSApp.activateInsistently()
         if alert.runModal() == .alertFirstButtonReturn { clearHistory() }
+        if settingsWindow?.isVisible != true { NSApp.returnToPreviousApp() }
     }
 
     // MARK: Settings
@@ -285,6 +291,7 @@ final class AppModel {
             return false
         }
         let press = RecallCore.KeyPress(event)
+        if event.isARepeat, KeyRouter.swallowsRepeat(press) { return true }
         guard let command = KeyRouter.command(for: press, focus: list.focus) else {
             // Typing while the list has focus continues the search.
             if KeyRouter.returnsFocusToSearch(press, focus: list.focus) { list.focus = .search }

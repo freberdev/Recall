@@ -93,6 +93,12 @@ public enum KeyRouter {
         command == .moveUp || command == .moveDown
     }
 
+    /// True for a key whose repeats are dropped wherever focus is. Deleting the last row
+    /// moves focus to the search field, and a ⌘⌫ still held down must not go on to clear the query.
+    public static func swallowsRepeat(_ press: KeyPress) -> Bool {
+        command(for: press, focus: .list) == .deleteSelected
+    }
+
     /// True for a key that is meant for the search field although the list has focus:
     /// anything typed without Command or Control that is not part of the key table.
     public static func returnsFocusToSearch(_ press: KeyPress, focus: HistoryList.Focus) -> Bool {

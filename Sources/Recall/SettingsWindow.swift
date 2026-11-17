@@ -30,8 +30,15 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window?.makeKeyAndOrderFront(nil)
     }
 
+    var isVisible: Bool { window?.isVisible ?? false }
+
     func windowDidResignKey(_ notification: Notification) { onInactive?() }
-    func windowWillClose(_ notification: Notification) { onInactive?() }
+
+    func windowWillClose(_ notification: Notification) {
+        onInactive?()
+        // Once the window is gone Recall has nothing to show, but it would stay the active app.
+        DispatchQueue.main.async { NSApp.returnToPreviousApp() }
+    }
 }
 
 extension NSApplication {
@@ -41,6 +48,17 @@ extension NSApplication {
     /// active, which is always the case for an app that lives in the menu bar.
     func activateInsistently() {
         (self as InsistentActivation).activate(ignoringOtherApps: true)
+    }
+}
+
+extension NSApplication {
+    /// Gives the keyboard back to the app that was in front before Recall was made active.
+    ///
+    /// Recall has no Dock icon and no main window, so nothing does this for it. Without it
+    /// the next ⌘V after choosing a clip would go to Recall, which has nowhere to paste.
+    func returnToPreviousApp() {
+        guard isActive else { return }
+        hide(nil)
     }
 }
 

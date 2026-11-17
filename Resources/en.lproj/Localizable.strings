@@ -42,7 +42,7 @@
 "settings.shortcut.needsModifier" = "A shortcut needs ⌘ or ⌃. Option alone would get in the way of typing characters such as @ and |.";
 "settings.shortcut.refused" = "macOS didn't accept that shortcut. The previous one is still in use.";
 "settings.login.label" = "Open Recall at login";
-"settings.login.failed" = "Couldn't change the login item. You can set it under System Settings > General > Login Items.";
+"settings.login.failed" = "Couldn't change the login item. You can set it under System Settings > General > Login Items & Extensions.";
 
 "settings.history.title" = "History";
 "settings.history.count" = "Keep at most";

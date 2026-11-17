@@ -42,7 +42,7 @@
 "settings.shortcut.needsModifier" = "Ett kortkommando behöver ⌘ eller ⌃. Bara Alternativ skulle krocka med tecken som @ och |.";
 "settings.shortcut.refused" = "macOS godtog inte kortkommandot. Det förra gäller fortfarande.";
 "settings.login.label" = "Öppna Recall vid inloggning";
-"settings.login.failed" = "Det gick inte att ändra inloggningsobjektet. Du kan ändra det under Systeminställningar > Allmänt > Inloggningsobjekt.";
+"settings.login.failed" = "Det gick inte att ändra inloggningsobjektet. Du kan ändra det under Systeminställningar > Allmänt > Startobjekt och tillägg.";
 
 "settings.history.title" = "Historik";
 "settings.history.count" = "Spara högst";
