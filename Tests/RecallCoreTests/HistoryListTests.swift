@@ -125,6 +125,28 @@ import Testing
         #expect(list.selected?.text == "one")
     }
 
+    @Test func theResultsFollowTheHistoryAndTheQuery() throws {
+        fill("git status", "brew upgrade")
+        #expect(list.results.map(\.text) == ["git status", "brew upgrade"])
+        #expect(list.results.map(\.text) == ["git status", "brew upgrade"])
+
+        list.query = "git"
+        #expect(list.results.map(\.text) == ["git status"])
+
+        store.record("git log", now: date(100))
+        #expect(list.results.map(\.text) == ["git log", "git status"])
+
+        try store.delete(id: store.clips[0].id)
+        #expect(list.results.map(\.text) == ["git status"])
+
+        store.markUsed(id: store.clips[1].id, now: date(200))
+        list.query = ""
+        #expect(list.results.map(\.text) == ["brew upgrade", "git status"])
+
+        try store.deleteAll()
+        #expect(list.results.isEmpty)
+    }
+
     // MARK: Deleting
 
     @Test func deletingSelectsTheRowThatTakesItsPlace() throws {

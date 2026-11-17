@@ -34,6 +34,7 @@ struct HistoryView: View {
             }
 
             let results = list.results
+            let selectedID = list.selectedID
             if results.isEmpty {
                 EmptyHistory(model: model, isSearching: !list.query.isEmpty)
             } else {
@@ -43,7 +44,7 @@ struct HistoryView: View {
                             ForEach(results) { clip in
                                 ClipRow(
                                     clip: clip,
-                                    isSelected: clip.id == list.selectedID,
+                                    isSelected: clip.id == selectedID,
                                     listHasFocus: list.focus == .list,
                                     model: model)
                                     .id(clip.id)
@@ -51,14 +52,14 @@ struct HistoryView: View {
                         }
                         .padding(6)
                     }
-                    .onChange(of: list.selectedID) { _, id in
+                    .onChange(of: selectedID) { _, id in
                         if let id { proxy.scrollTo(id) }
                     }
                 }
             }
 
             Divider()
-            StatusLine(model: model, hasSelection: list.selectedID != nil, listHasFocus: list.focus == .list)
+            StatusLine(model: model, hasSelection: selectedID != nil, listHasFocus: list.focus == .list)
         }
         .ignoresSafeArea()
         .onAppear { searchFocused = true }

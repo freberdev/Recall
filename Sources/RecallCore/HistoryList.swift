@@ -22,6 +22,8 @@ public final class HistoryList {
     private let locale: Locale
     /// The row the user moved to. Nil, or a clip that is no longer shown, means the first row.
     private var chosenID: UUID?
+    /// The last search and what it gave. A view asks for the results many times per redraw.
+    @ObservationIgnored private var lastSearch: (revision: Int, query: String, results: [Clip])?
 
     public init(store: HistoryStore, locale: Locale = .current) {
         self.store = store
@@ -29,7 +31,14 @@ public final class HistoryList {
     }
 
     public var results: [Clip] {
-        ClipSearch.filter(store.clips, query: query, locale: locale)
+        // Reading both registers them with observation even when the answer is already known.
+        let clips = store.clips, query = query
+        if let lastSearch, lastSearch.revision == store.revision, lastSearch.query == query {
+            return lastSearch.results
+        }
+        let results = ClipSearch.filter(clips, query: query, locale: locale)
+        lastSearch = (store.revision, query, results)
+        return results
     }
 
     /// The selected clip. There is always one as long as anything is shown.
