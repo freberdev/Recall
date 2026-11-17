@@ -13,6 +13,8 @@
 "history.search.label" = "Search history";
 "history.kind.text" = "Text";
 "history.kind.link" = "Link";
+"history.kind.image" = "Image";
+"history.image.size" = "%ld × %ld";
 "history.row.copy" = "Copy";
 "history.row.delete" = "Delete";
 "history.noMatches" = "No matches.";
@@ -45,8 +47,12 @@
 "settings.login.failed" = "Couldn't change the login item. You can set it under System Settings > General > Login Items & Extensions.";
 
 "settings.history.title" = "History";
-"settings.history.count" = "Keep at most";
-"settings.history.count.value" = "%ld clips";
+"settings.history.count" = "Texts and links to keep";
+"settings.history.count.value" = "Up to %ld";
+"settings.history.images" = "Images to keep";
+"settings.history.images.none" = "None";
+"settings.history.imageSize" = "Largest image";
+"settings.history.imageSize.value" = "%ld MB";
 "settings.history.age" = "Remove unused clips after";
 "settings.history.age.day" = "1 day";
 "settings.history.age.week" = "1 week";
@@ -61,7 +67,7 @@
 
 "settings.privacy.title" = "Privacy";
 "settings.privacy.collect" = "Collect what I copy";
-"settings.privacy.what" = "Recall keeps the text and links you copy. It skips what password managers mark as confidential, but it can't recognise everything that is sensitive. Pause collecting or delete a clip whenever you need to.";
+"settings.privacy.what" = "Recall keeps the text, links and images you copy. It skips what password managers mark as confidential, but it can't recognise everything that is sensitive. Pause collecting or delete a clip whenever you need to.";
 "settings.privacy.where" = "The history is stored encrypted on this Mac and never leaves it. Recall has no access to the network.";
 "settings.privacy.folder" = "History folder";
 "settings.privacy.reveal" = "Show in Finder";

@@ -74,22 +74,58 @@ private struct ClipRow: View {
     @State private var isHovered = false
 
     private var isEmphasized: Bool { isSelected && listHasFocus }
-    private var preview: String { ClipPreview.line(for: clip.text) }
     private var time: String { TimeLabel.string(for: clip.used, now: Date()) }
-    private var kindName: String { clip.kind == .link ? L("history.kind.link") : L("history.kind.text") }
+
+    /// What the row says: the start of the text, or the size of the image in pixels.
+    private var preview: String {
+        if let image = clip.image { return L("history.image.size", image.width, image.height) }
+        return ClipPreview.line(for: clip.text)
+    }
+
+    private var kindName: String {
+        switch clip.kind {
+        case .text: L("history.kind.text")
+        case .link: L("history.kind.link")
+        case .image: L("history.kind.image")
+        }
+    }
+
+    private var symbol: String {
+        switch clip.kind {
+        case .text: "text.alignleft"
+        case .link: "link"
+        case .image: "photo"
+        }
+    }
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: clip.kind == .link ? "link" : "text.alignleft")
+            Image(systemName: symbol)
                 .font(.system(size: 12))
                 .frame(width: 16)
                 .foregroundStyle(isEmphasized ? AnyShapeStyle(.white.opacity(0.8)) : AnyShapeStyle(.secondary))
                 .help(kindName)
 
-            Text(preview)
-                .lineLimit(1)
-                .truncationMode(clip.kind == .link ? .middle : .tail)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if let thumbnail = Thumbnails.image(for: clip) {
+                let size = Thumbnails.size(of: thumbnail)
+                Image(nsImage: thumbnail)
+                    .resizable()
+                    .frame(width: size.width, height: size.height)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.primary.opacity(0.15)))
+                    .accessibilityHidden(true)
+                Text(preview)
+                    .font(.callout)
+                    .monospacedDigit()
+                    .foregroundStyle(isEmphasized ? AnyShapeStyle(.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text(preview)
+                    .lineLimit(1)
+                    .truncationMode(clip.kind == .link ? .middle : .tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
             if isSelected || isHovered {
                 Button {
@@ -127,6 +163,28 @@ private struct ClipRow: View {
         if isSelected { return AnyShapeStyle(.primary.opacity(0.1)) }
         if isHovered { return AnyShapeStyle(.primary.opacity(0.05)) }
         return AnyShapeStyle(.clear)
+    }
+}
+
+/// The small pictures in the list, decoded once each.
+@MainActor
+private enum Thumbnails {
+    private static let cache = NSCache<NSUUID, NSImage>()
+
+    static func image(for clip: Clip) -> NSImage? {
+        guard let data = clip.image?.thumbnail else { return nil }
+        if let cached = cache.object(forKey: clip.id as NSUUID) { return cached }
+        guard let image = NSImage(data: data) else { return nil }
+        cache.setObject(image, forKey: clip.id as NSUUID)
+        return image
+    }
+
+    /// The picture's own proportions, as large as fits in a row.
+    static func size(of image: NSImage) -> CGSize {
+        let bounds = CGSize(width: 120, height: 44)
+        guard image.size.width > 0, image.size.height > 0 else { return bounds }
+        let scale = min(bounds.width / image.size.width, bounds.height / image.size.height)
+        return CGSize(width: (image.size.width * scale).rounded(), height: (image.size.height * scale).rounded())
     }
 }
 

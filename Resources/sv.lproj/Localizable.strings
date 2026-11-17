@@ -13,6 +13,8 @@
 "history.search.label" = "Sök i historiken";
 "history.kind.text" = "Text";
 "history.kind.link" = "Länk";
+"history.kind.image" = "Bild";
+"history.image.size" = "%ld × %ld";
 "history.row.copy" = "Kopiera";
 "history.row.delete" = "Radera";
 "history.noMatches" = "Inga träffar.";
@@ -45,8 +47,12 @@
 "settings.login.failed" = "Det gick inte att ändra inloggningsobjektet. Du kan ändra det under Systeminställningar > Allmänt > Startobjekt och tillägg.";
 
 "settings.history.title" = "Historik";
-"settings.history.count" = "Spara högst";
-"settings.history.count.value" = "%ld urklipp";
+"settings.history.count" = "Texter och länkar att spara";
+"settings.history.count.value" = "Högst %ld";
+"settings.history.images" = "Bilder att spara";
+"settings.history.images.none" = "Inga";
+"settings.history.imageSize" = "Största bild";
+"settings.history.imageSize.value" = "%ld MB";
 "settings.history.age" = "Ta bort oanvända urklipp efter";
 "settings.history.age.day" = "1 dag";
 "settings.history.age.week" = "1 vecka";
@@ -61,7 +67,7 @@
 
 "settings.privacy.title" = "Integritet";
 "settings.privacy.collect" = "Samla in det jag kopierar";
-"settings.privacy.what" = "Recall sparar text och länkar som du kopierar. Det som lösenordshanterare märker som hemligt hoppas över, men Recall kan inte känna igen allt som är känsligt. Pausa insamlingen eller radera ett urklipp när du behöver.";
+"settings.privacy.what" = "Recall sparar text, länkar och bilder som du kopierar. Det som lösenordshanterare märker som hemligt hoppas över, men Recall kan inte känna igen allt som är känsligt. Pausa insamlingen eller radera ett urklipp när du behöver.";
 "settings.privacy.where" = "Historiken lagras krypterad på den här Macen och lämnar den aldrig. Recall har ingen åtkomst till nätverket.";
 "settings.privacy.folder" = "Mapp för historiken";
 "settings.privacy.reveal" = "Visa i Finder";

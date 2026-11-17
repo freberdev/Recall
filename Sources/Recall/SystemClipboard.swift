@@ -29,6 +29,26 @@ final class SystemClipboard: ClipboardSource {
         return pasteboard.string(forType: .string)
     }
 
+    /// The image in the format Recall would rather have, read under the same condition as text.
+    func readImage() -> Data? {
+        guard access == .allowed else { return nil }
+        let offered = types
+        guard let type = CaptureRule.imageTypes.first(where: offered.contains) else { return nil }
+        return pasteboard.data(forType: NSPasteboard.PasteboardType(type))
+    }
+
+    /// Replaces the contents with an image and returns the change count after the write.
+    ///
+    /// The image goes out in the format it is stored in, and as TIFF for apps that only take that.
+    func write(image data: Data, format: Clip.ImageFormat) -> Int {
+        pasteboard.clearContents()
+        pasteboard.setData(data, forType: NSPasteboard.PasteboardType(format.typeIdentifier))
+        if let tiff = NSBitmapImageRep(data: data)?.tiffRepresentation {
+            pasteboard.setData(tiff, forType: .tiff)
+        }
+        return pasteboard.changeCount
+    }
+
     /// Replaces the contents with `text` and returns the change count after the write.
     func write(_ text: String) -> Int {
         pasteboard.clearContents()

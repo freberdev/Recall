@@ -42,6 +42,18 @@ struct SettingsView: View {
                         Text(L("settings.history.count.value", count)).tag(count)
                     }
                 }
+                Picker(L("settings.history.images"), selection: maxImageCount) {
+                    ForEach(Limits.imageCountChoices, id: \.self) { count in
+                        Text(count == 0 ? L("settings.history.images.none") : L("settings.history.count.value", count))
+                            .tag(count)
+                    }
+                }
+                Picker(L("settings.history.imageSize"), selection: maxImageMegabytes) {
+                    ForEach(Limits.imageMegabyteChoices, id: \.self) { megabytes in
+                        Text(L("settings.history.imageSize.value", megabytes)).tag(megabytes)
+                    }
+                }
+                .disabled(!model.limits.collectsImages)
                 Picker(L("settings.history.age"), selection: maxAgeDays) {
                     Text(L("settings.history.age.day")).tag(1)
                     Text(L("settings.history.age.week")).tag(7)
@@ -101,17 +113,25 @@ struct SettingsView: View {
         }
     }
 
-    private var maxCount: Binding<Int> {
+    /// A binding to one of the limits. Changing it applies the new limits at once.
+    private func limit<Value>(_ keyPath: WritableKeyPath<Limits, Value>) -> Binding<Value> {
         Binding(
-            get: { model.limits.maxCount },
-            set: { model.setLimits(Limits(maxCount: $0, maxAgeDays: model.limits.maxAgeDays)) })
+            get: { model.limits[keyPath: keyPath] },
+            set: { value in
+                var limits = model.limits
+                limits[keyPath: keyPath] = value
+                model.setLimits(limits)
+            })
     }
+
+    private var maxCount: Binding<Int> { limit(\.maxCount) }
+    private var maxImageCount: Binding<Int> { limit(\.maxImageCount) }
+    private var maxImageMegabytes: Binding<Int> { limit(\.maxImageMegabytes) }
 
     /// Zero stands for "never".
     private var maxAgeDays: Binding<Int> {
-        Binding(
-            get: { model.limits.maxAgeDays ?? 0 },
-            set: { model.setLimits(Limits(maxCount: model.limits.maxCount, maxAgeDays: $0 == 0 ? nil : $0)) })
+        let days = limit(\.maxAgeDays)
+        return Binding(get: { days.wrappedValue ?? 0 }, set: { days.wrappedValue = $0 == 0 ? nil : $0 })
     }
 
     private var collecting: Binding<Bool> {

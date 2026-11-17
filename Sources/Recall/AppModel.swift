@@ -160,7 +160,17 @@ final class AppModel {
         // Something copied a moment ago may not have been seen yet. Record it first, or
         // Recall's own write would hide it.
         watcher.poll()
-        let changeCount = clipboard.write(clip.text)
+        let changeCount: Int
+        if let image = clip.image {
+            // The image itself is only read from disk now that it is wanted.
+            guard let data = store.imageData(for: clip.id) else {
+                NSSound.beep()
+                return
+            }
+            changeCount = clipboard.write(image: data, format: image.format)
+        } else {
+            changeCount = clipboard.write(clip.text)
+        }
         watcher.ignoreChange(changeCount)
         store.markUsed(id: clip.id, now: Date())
         closePanel()
