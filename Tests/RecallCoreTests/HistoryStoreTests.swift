@@ -253,6 +253,78 @@ import Testing
         #expect(!store.saveFailed)
     }
 
+    @Test func clipsThatCouldNotBeSavedAreSavedWhenTheDiskAllowsItAgain() throws {
+        let store = makeStore()
+        store.record("saved", now: date(1))
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: temp.history.path)
+        store.record("failed one", now: date(2))
+        store.record("failed two", now: date(3))
+        #expect(restarted().clips.map(\.text) == ["saved"])
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: temp.history.path)
+        store.record("saved again", now: date(4))
+
+        #expect(!store.saveFailed)
+        #expect(restarted().clips.map(\.text) == ["saved again", "failed two", "failed one", "saved"])
+    }
+
+    @Test func clipsThatCouldNotBeSavedAreRetriedWhenTheHistoryIsPruned() throws {
+        let store = makeStore()
+        store.record("saved", now: date(1))
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: temp.history.path)
+        store.record("failed", now: date(2))
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: temp.history.path)
+
+        store.prune(now: date(3))
+
+        #expect(!store.saveFailed)
+        #expect(restarted().clips.map(\.text) == ["failed", "saved"])
+    }
+
+    @Test func oneFailureDoesNotHideAnother() throws {
+        let store = makeStore()
+        try FileManager.default.createDirectory(at: temp.history, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: temp.history.path)
+        let failed = store.record("failed", now: date(1))
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: temp.history.path)
+        #expect(store.saveFailed)
+
+        // Deleting the clip that was never saved leaves nothing unsaved.
+        try store.delete(id: failed.id)
+        #expect(!store.saveFailed)
+    }
+
+    @Test func anExpiredClipThatCannotBeRemovedStaysUntilItCan() throws {
+        let store = makeStore(limits: Limits(maxCount: 100, maxAgeDays: 1))
+        store.record("ancient", now: date(0))
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: temp.history.path)
+
+        store.prune(now: date(86_400 * 3))
+        #expect(store.clips.map(\.text) == ["ancient"])
+        #expect(store.saveFailed)
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: temp.history.path)
+        store.prune(now: date(86_400 * 3))
+        #expect(store.clips.isEmpty)
+        #expect(!store.saveFailed)
+        #expect(temp.fileNames().isEmpty)
+    }
+
+    @Test func aClearThatOnlyPartlySucceedsLeavesTheListMatchingTheDisk() throws {
+        let store = makeStore()
+        store.record("goes", now: date(1))
+        let stuck = store.record("stays", now: date(2))
+        store.record("goes too", now: date(3))
+        let stuckPath = temp.history.appendingPathComponent("\(stuck.id.uuidString).clip").path
+        try FileManager.default.setAttributes([.immutable: true], ofItemAtPath: stuckPath)
+        defer { try? FileManager.default.setAttributes([.immutable: false], ofItemAtPath: stuckPath) }
+
+        #expect(throws: (any Error).self) { try store.deleteAll() }
+
+        #expect(store.clips.map(\.text) == ["stays"])
+        #expect(temp.fileNames().count == 1)
+    }
+
     @Test func aClipThatCannotBeDeletedStaysInTheList() throws {
         let store = makeStore()
         let clip = store.record("stubborn", now: date(1))

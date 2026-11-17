@@ -4,23 +4,33 @@ import Observation
 /// The history in memory, most recently used first, kept in step with the files on disk.
 @MainActor @Observable
 public final class HistoryStore {
-    public private(set) var clips: [Clip] = []
+    public private(set) var clips: [Clip] = [] {
+        didSet { revision &+= 1 }
+    }
 
-    /// True when the last attempt to write or remove a file failed. The list in memory is
-    /// still right, but it may not survive a restart.
-    public private(set) var saveFailed = false
+    /// Grows every time `clips` changes, so that work based on the list can be reused until then.
+    @ObservationIgnored public private(set) var revision = 0
 
     public private(set) var limits: Limits
 
     @ObservationIgnored private let files: ClipFiles
+    /// Clips whose latest state is not on disk. They are written again at the next opportunity.
+    private var unsaved: Set<UUID> = []
+    /// True when a clip that should be gone could not be removed from disk. It stays in the list.
+    private var removalFailed = false
 
     public init(files: ClipFiles, limits: Limits = .default) {
         self.files = files
         self.limits = limits
-        saveFailed = !files.canWrite
     }
 
     public var directory: URL { files.directory }
+
+    /// True while the list in memory and the files on disk do not agree: something could not
+    /// be written or removed. The list is still right, but it may not survive a restart.
+    public var saveFailed: Bool {
+        !files.canWrite || !unsaved.isEmpty || removalFailed
+    }
 
     /// True when there is something for `deleteAll` to remove: clips in the list, or files
     /// on disk that could not be read, for instance after the key was lost.
@@ -31,6 +41,7 @@ public final class HistoryStore {
     /// Reads the files and drops what the limits no longer allow.
     public func load(now: Date) {
         clips = files.loadAll().sorted(by: Self.isBefore)
+        unsaved = []
         prune(now: now)
     }
 
@@ -58,13 +69,22 @@ public final class HistoryStore {
     public func delete(id: UUID) throws {
         try files.delete(id: id)
         clips.removeAll { $0.id == id }
+        unsaved.remove(id)
     }
 
-    /// Removes everything, including files that could not be read.
+    /// Removes everything, including files that could not be read. If some files cannot be
+    /// removed, the list is left showing what is still on disk.
     public func deleteAll() throws {
-        try files.deleteAll()
+        do {
+            try files.deleteAll()
+        } catch {
+            clips = files.loadAll().sorted(by: Self.isBefore)
+            unsaved = []
+            throw error
+        }
         clips = []
-        saveFailed = !files.canWrite
+        unsaved = []
+        removalFailed = false
     }
 
     public func setLimits(_ new: Limits, now: Date) {
@@ -73,20 +93,26 @@ public final class HistoryStore {
     }
 
     /// Removes clips that are too old, then the least recently used beyond the largest count.
+    /// A clip whose file cannot be removed stays in the list and is tried again next time.
     public func prune(now: Date) {
+        saveUnsaved()
+
         var doomed: [Clip] = []
         if let maxAge = limits.maxAge {
             doomed += clips.filter { now.timeIntervalSince($0.used) > maxAge }
         }
-        let kept = clips.filter { clip in !doomed.contains { $0.id == clip.id } }
-        doomed += kept.dropFirst(max(limits.maxCount, 0))
-        guard !doomed.isEmpty else { return }
+        let expired = Set(doomed.map(\.id))
+        doomed += clips.filter { !expired.contains($0.id) }.dropFirst(max(limits.maxCount, 0))
 
+        var removed: Set<UUID> = []
         for clip in doomed {
-            do { try files.delete(id: clip.id) } catch { saveFailed = true }
+            if (try? files.delete(id: clip.id)) != nil { removed.insert(clip.id) }
         }
-        let ids = Set(doomed.map(\.id))
-        clips.removeAll { ids.contains($0.id) }
+        let failed = removed.count < doomed.count
+        if failed != removalFailed { removalFailed = failed }
+        guard !removed.isEmpty else { return }
+        clips.removeAll { removed.contains($0.id) }
+        unsaved.subtract(removed)
     }
 
     // MARK: Order
@@ -108,13 +134,22 @@ public final class HistoryStore {
         return max(now, top.used.addingTimeInterval(0.001))
     }
 
+    // MARK: Writing
+
     private func persist(_ clip: Clip) {
-        do {
-            try files.write(clip)
-            saveFailed = false
-        } catch {
-            saveFailed = true
+        unsaved.insert(clip.id)
+        saveUnsaved()
+    }
+
+    /// Writes every clip that is not on disk yet. One successful write must not hide that
+    /// earlier ones failed, so each clip stays marked until its own file is written.
+    private func saveUnsaved() {
+        guard files.canWrite, !unsaved.isEmpty else { return }
+        var remaining: Set<UUID> = []
+        for clip in clips where unsaved.contains(clip.id) {
+            if (try? files.write(clip)) == nil { remaining.insert(clip.id) }
         }
+        unsaved = remaining
     }
 
     /// Most recently used first. Ties are settled the same way every time.
